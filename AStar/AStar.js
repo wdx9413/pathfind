@@ -1,3 +1,11 @@
+/*
+	1、起点加入open集合
+	2、open集合中选最小值node，将其放入close集合中
+	3、处理node，将邻居（非障碍且非close集合）加入到open集合中（如果已存在，且本次花费小于原节点则修改原节点，否则不）
+	4、重复2
+	结束条件：open集合为空，或者到达终点	
+*/
+
 var mapData = [
 			[0,0,0,0,0],
 			[0,0,1,0,0],
@@ -34,8 +42,12 @@ function aStarFinder(start,end,gridData){
 	var endId = x1*maxY+y1;
 	pushOpen(startTile,endId);
 }
+
 function findBestFValue(endId){
-	if(openList.length<=0) return;
+	if(openList.length<=0){
+		console.log('无路径');
+		return;
+	} 
 	var cost = openList[0].fValue;
 	var index = 0;
 	for(var i = 1; i < openList.length; i++){
@@ -44,32 +56,74 @@ function findBestFValue(endId){
 			cost = openList[i].fValue;
 		}
 	}
-	pushOpen(openList[index]);
+	pushOpen(openList[index],endId);
 }
 function pushOpen(tile,endId){
 	var id = tile.id;
 	var x = Math.floor(id / maxY);
 	var y = id % maxY;
-	// TODO
 	if(x-1>=0 && mapData[x-1][y] == 0 && !myIndexOf(closeList,id-5)){
-		openList.push(id,id - 5,computeFValue(tile.gValue + gAdd,id-5,endId));
+		var aTile = myIndexOf(openList,id - 5);
+		if(!aTile)
+			openList.push(aTile = new Tile(id,id - 5,computeFValue(tile.gValue + gAdd,id-5,endId)));
+		else{
+			var fValue = computeFValue(tile.gValue - gAdd,id - 5,endId);
+			if(fValue < aTile.fValue){
+				aTile.fValue = fValue;
+				aTile.pId = id;
+			}
+		}	
+		if(aTile.id == endId){
+			console.log('终点到了',aTile);
+			return;
+		}
 	}
 	if(x+1<=maxX && mapData[x+1][y] == 0 && !myIndexOf(closeList,id+5)){
-		openList.push(id,id + 5,computeFValue(tile.gValue + gAdd,id+5,endId));
+		var aTile = myIndexOf(openList,id+5);
+		if(!aTile)
+			openList.push(aTile = new Tile(id,id + 5,computeFValue(tile.gValue + gAdd,id+5,endId)));
+		else{
+			var fValue = computeFValue(tile.gValue - gAdd,id+5,endId);
+			if(fValue < aTile.fValue){
+				aTile.fValue = fValue;
+				aTile.pId = id;
+			}
+		}
+		if(aTile.id == endId){
+			console.log('终点到了',aTile);
+			return;
+		}		
 	}
 	if(y-1>=0 && mapData[x][y-1] == 0 && !myIndexOf(closeList,id-1)){
-		openList.push(id,x,id - 1,computeFValue(tile.gValue + gAdd,id-1,endId));
+		var aTile = myIndexOf(openList,id+1);
+		if(!aTile)
+			openList.push(aTile = new Tile(id,x,id - 1,computeFValue(tile.gValue + gAdd,id-1,endId)));
+		else{
+			var fValue = computeFValue(tile.gValue - gAdd,id-1,endId);
+			if(fValue < aTile.fValue){
+				aTile.fValue = fValue;
+				aTile.pId = id;
+			}
+		}
+		if(aTile.id == endId){
+			console.log('终点到了',aTile);
+			return;
+		}
 	}
 	if(y+1<=maxY && mapData[x][y+1] == 0 && !myIndexOf(closeList,id+1)){
 		var aTile = myIndexOf(openList,id+1);
 		if(!aTile)
-			openList.push(id,id + 1,computeFValue(tile.gValue + gAdd,id+1,endId));
+			openList.push(aTile = new Tile(id,id + 1,computeFValue(tile.gValue + gAdd,id+1,endId)));
 		else{
 			var fValue = computeFValue(tile.gValue + gAdd,id+1,endId);
 			if(fValue < aTile.fValue){
 				aTile.fValue = fValue;
 				aTile.pId = id;
 			}
+		}
+		if(aTile.id == endId){
+			console.log('终点到了',aTile);
+			return;
 		}
 	}
 	findBestFValue(endId);
@@ -88,3 +142,4 @@ function computeFValue(gValue,id,endId){
 	var hValue = (Math.abs(x0-x1)+Math.abs(y0-y1))*hAdd;
 	return gValue + hValue;
 }
+aStarFinder(start,end,mapData);
